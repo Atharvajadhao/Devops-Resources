@@ -1,0 +1,101 @@
+mysql-endpoint = mysql-db-1.cz5g0vbozj32.us-east-2.rds.amazonaws.com
+
+Install mysql client:
+sudo apt install mysql-client
+
+Connect to db using mysql-client:
+mysql -h mysql-db-1.cz5g0vbozj32.us-east-2.rds.amazonaws.com -u admin -p 
+
+create databse chatdb;
+
+
+------------------------------------into your backend instance------------------------------------
+
+sudo apt-get update
+sudo apt-get install python-pip python-dev git
+
+sudo apt-get update
+sudo pip install virtualenv
+git clone https://github.com/peyyala7hills/new_chatapp
+
+cd new_chatapp
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install gunicorn
+cd fundoo
+sudo vim settings.py
+
+update database details in settings.py
+host "endpoint-mysqldb"
+username "admin"
+name "chatdb"
+password ""
+port "3306"
+
+add the line below to the bottom of the file
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+Save your changes and quit. ESC :wq
+
+sudo apt-get install python3-dev default-libmysqlclient-dev build-essential
+pip3 install mysqlclient
+python3 manage.py migrate
+
+python3 manage.py collectstatic
+python3 manage.py makemigrations
+python3 manage.py runserver 0.0.0.0:8000
+gunicorn --bind 0.0.0.0:8000 fundoo.wsgi:application
+
+Next, we will create a service file for gunicorn
+sudo vim /etc/systemd/system/gunicorn.service
+
+[Unit]
+Description=gunicorn daemon
+After=network.target
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/new_chatapp/fundoo
+ExecStart=/home/ubuntu/new_chatapp/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 fundoo.wsgi:application
+[Install]
+WantedBy=multi-user.target
+
+sudo systemctl daemon-reload
+sudo systemctl start gunicorn
+sudo systemctl enable gunicorn
+sudo systemctl status gunicorn
+
+--------------------------------------In Front-End Instance---------------------------------------------
+Install nginx server
+sudo apt install nginx
+
+Create a configuration file for Nginx using the following command
+sudo vim /etc/nginx/sites-available/fundoo
+
+Paste the below contents inside the file created
+server {
+  listen 80;
+  server_name public_ip_of_frontend;
+  #location = /favicon.ico { access_log off; log_not_found off; }
+  #location /static/ {
+  #    root /home/ubuntu/new_chatapp/fundoo;
+  #}
+  location / {
+      include proxy_params;
+      proxy_pass http://192.168.133.94:8000;
+  }
+}
+
+Activate the configuration using the following command:
+sudo ln -s /etc/nginx/sites-available/fundoo /etc/nginx/sites-enabled/
+
+Restart nginx and allow the changes to take place.
+sudo systemctl restart nginx
+
+
+
+If not working open port 8000 in security group of backend instance (inbound rules)
+and port 80 in security group of frontend instance (inbound rules)
+
+
+

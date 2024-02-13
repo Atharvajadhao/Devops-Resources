@@ -1,0 +1,99 @@
+Create a bucket:
+	AWS console > S3 bucket
+	1. Choose create bucket
+	2. Enter "Bucket Name"
+	3. Choose region (choose the region closer to you)
+	4. Choose to enable or disable ACLs
+	5. uncheck block public access (as we have to make it public to be accessible by internet
+	6. you can keep the bucket versioning disabled or enabled (depends on you)
+	7. keep default encryption
+	8. then create the bucket
+
+Now we need to put some object in the bucket
+	1. go to that specific bucket
+	2. select upload
+	3. click on add file, to add the files which you want to upload to the bucket
+	4. then click on upload
+
+Now if you want to access these uploaded object through browser, then you need to change their access policy to public using ACLs
+	1. select the specific object
+	2. go to the permissiong setting
+	3. in ACLs, enable the "public read access"
+	4. and then save the changes
+	5. now if you try ti access that object in the browse using the object url, you will be able to see that object
+
+To enable static web hosting:
+	1. go to that specific bucket
+	2. go to the properties section
+	3. now click on edit in static website hosting section and make it enable
+	4. and give the name of index file
+	5. click save
+	6. under the static website hosting section their is the endpoint
+
+	7. now we need to give public access to the bucket
+	8. first uncheck the block public access
+	9. now add bucket policy that makes you bucket content public
+		add the following to bucket polity editor and save the changes
+		{
+    			"Version": "2012-10-17",
+    			"Statement": [
+				{
+					"Sid": "PublicReadGetObject",
+					"Effect": "Allow",
+					"Principal": "*",
+					"Action": [
+						"s3:GetObject"
+					],
+					"Resource": [
+						"arn:aws:s3:::Bucket-Name/*"
+					]
+				}
+			]
+		}
+		Version: Specifies the version of the policy language.
+		Statement: An array of statements, and in this case, there's one statement. 
+		Sid: A string identifier for the statement. In this case, it's named "PublicReadGetObject." 
+		Effect: Specifies whether the statement allows or denies access. In this case, it's set to "Allow". 
+		Principal: Specifies the entity that is allowed or denied access. The "*" wildcard here means any AWS principal. 
+		Action: An array of actions that are allowed or denied. In this case, it's set to allow the "s3:GetObject" action. 
+		Resource: An array of Amazon Resource Names (ARNs) that identify the resource to which the statement applies. In this case, it's allowing s3:GetObject on objects within the specified S3 bucket, represented by the ARN "arn:aws:s3:::Bucket-Name/*".
+	
+	10. now we can access the website using the url give in the column of the static website hosting.
+
+
+Now we can create a CloudFront distribution
+	AWS > CloudFront
+	choose "Create a cloudfront distribution"
+	Origin Setting
+		1. Specify the origin domain name (like of ans S3 bucket or HTTP server) of whatever your origin is
+		2. specify origin path, if you content to deliver is ni any directory in the origin
+		3. give name that uniquely identify the origin in the distribution
+		4. (optional) add custome header, custom headers enable you to send and gather information from your origin that you don’t get with typical viewer requests
+		5. origin shield: its an added layer of caching in front of origin
+		6. connection attempt: umber of times that CloudFront attempts to connect to the origin
+		7. connection timeout: number of seconds that CloudFront waits for a response from the origin
+		8. Keep-alive timeout: number of seconds that CloudFront maintains an idle connection with the origin
+	Cache behaviour settings
+		1. path pattern: specifies which requests you want this cache behavior to apply to
+		2. compressing object automatically: CloudFront can automatically compress certain files that it receives from the origin before delivering them to the viewer.
+		3. Choose the protocol policy that you want viewers to use to access your content in CloudFront edge locations
+		4. Specify the HTTP methods that you want CloudFront to process and forward to your origin
+		5. cache policy and origin request policy: determine the values that CloudFront includes in origin requests
+	Function association:
+
+	Web application firewall (WAF):
+		provides your application with a first line of defense against web threats
+	
+
+After creating CloudFront distribution, you can get the "Distribution domain name" from the "General" menu in the create distribution, and then it can be accessible from the browser
+
+		
+
+
+
+
+
+
+
+
+

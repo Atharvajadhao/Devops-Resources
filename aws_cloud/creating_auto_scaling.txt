@@ -1,0 +1,25 @@
+Create a Auto Scaling Group (ASG) for backend instance:
+	AWS console > Auto Scaling Group
+	Choose Create auto scaling group
+	Step-1: Choose launch templates or configuration option
+		1. Enter auto scaling group name => 'backend-ASG'
+		2. Choose existing launch template
+		3. Choose specific version of that launch template
+		4. choose next
+	Step-2: Choose instance launch options	
+		1. choose your VPC 
+		2. choose your subnet
+		3. then next
+	Step-3: Configure advanced options
+		1. select 'Attach an existing load balancer'
+		2. then choose 'choose from load balancer target group'
+		3. and then choose the load balancer
+		4. Turn on Elastic Load Balancing health checks
+	Step-4: Configure group size and scaling
+		1. choose desired capacity (here 1)
+		2. choose min capacity (here 1)
+		3. choose max capacity (here 2)
+		4. choose instance maintainance policy (here default)
+	Step-5: Add notification
+		1. add notification as per your requirements
+	Step-6: Review and create ASG

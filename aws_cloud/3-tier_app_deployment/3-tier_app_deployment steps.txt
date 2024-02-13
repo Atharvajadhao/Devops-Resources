@@ -1,0 +1,80 @@
+
+Login in to the mysql db instance:
+mysql-endpoint = mysql-db-1.cz5g0vbozj32.us-east-2.rds.amazonaws.com
+
+Install mysql client:
+sudo apt install mysql-client
+
+Connect to db using mysql-client:
+mysql -h mysql-db-1.cz5g0vbozj32.us-east-2.rds.amazonaws.com -u admin -p 
+
+create databse chatdb;
+
+
+
+First we are created one network
+
+In this network u created three subnetworks
+
+one is public subnet
+another two is private subnets
+after that your launching instances as part of your deployment 
+you required a frontend and backend
+in this frontend we are exposng to outside world in this case we launching instance with public-ip.
+backend-server doesn't required public connection
+so you need to deploy application backend server you need to ssh to backend for this case study you need to connect backend instance via frontend
+backend application server application server need to connect to database in this case you need to install mysql-client
+and then we are establishing backend to database
+
+now you need to deploy application in the backend
+
+clone the respective application repo
+and then you need to watch demo video take it as reference
+
+update database details in settings.py
+host "endpoint-ysqldb"
+username ""
+database "chatdb"
+password ""
+port "3306"
+
+
+sudo systemctl status gunicorn
+
+wyour application working
+
+Then ====> exit==>backend
+
+In the frontend
+
+sudo apt install nginx
+
+
+
+update backend ip in the proxypass port
+
+after that sudo systemctl restart nginx
+
+
+take this public-ip
+
+paste it in the browser and access through browser
+
+telent backend-ip port
+
+curl http://backend-ip:port
+
+80-->
+
+
+
+
+
+
+
+
+
+
+
+
+

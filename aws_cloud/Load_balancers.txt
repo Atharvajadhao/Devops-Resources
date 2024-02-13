@@ -1,0 +1,37 @@
+Creating and COnfiguring a load balancer
+
+Step-1: Configure a target group
+	Create 1st target group of web-servers (front-end) (http_load_balancer)
+	Aws console > target group
+	1. Create target group
+	2. Choose target type
+	3. Enter Target group name
+	4. Modify the Port and Protocol as needed
+	5. If the target type is Instances or IP addresses, choose IPv4 or IPv6 as the IP address type
+	6. Select your VPC
+	7. Select HTTP version
+	8. Health Check settings, generally default
+
+	Create another target group (TCP_load_balancer)
+
+Step-2: Register targets
+	1. is register target page add one or more target
+	2. create target group
+
+Step-3: Configure a load balancer and a listner
+	Creating a TCP_loadbalancer (internal)
+	AWS console > load balancer
+	1. Choose create load balancer
+	2. Application Load Balancer > Create
+	3. Name your load balancer
+	4. choose 'internal'
+	5. choose IP address type'ipv4'
+	6. In neetwork mapping, select you VPC 
+	7. Then select at least 2 private subnets
+	8. In security group you can keep it default
+	9. Next give TCP:8000 protocal and port and select the appropriate security group
+	10. Create the load balancer
+
+	Similarly Create the load balancer for HTTP_load_balancer (external) (ALB)
+
+give the DNS name of load balancer instead of the backend server IP
