@@ -1,0 +1,4 @@
+Cloud Watch
+Cloud Trail
+KMS
+AWS firewall - WAF (ZAP testing)

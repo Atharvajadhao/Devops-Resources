@@ -1,0 +1,14 @@
+Cross account access using IAM Role
+1. Login into account A.
+2. Create one group and then create two IAM users in it (user1 & user2)
+3. Attach policy to group -> EC2ReadOnly Access
+4. Login to second account i.e account B
+5. Create 1 S3 bucket
+6. Create a role -> Another AWS Account -> Insert Account ID of A account -> Attach Policy -> S3Read-Only Access -> Role Name-S3Read
+7. Now login back to account A, click on 'Group'  -> Permission -> Incline policy -> Select -> AWS secuity token service (STS) -> Service-Assume Role -> Click on the add statement -> apply policy
+8. Now login as IAM user1
+9. Switch Role -> Now check, weather yu are able to see the s3 bucket of another account or not
+10. Repeat Step 8 & 9 but with User2
+11. Now login into account B -> Role -> trust relationship -> edit -> paste the ARN of user1 -> update policy
+12. Now login again in user1 -> switch role -> test s3 bucket
+13. Now login as user2 -> switch role -> you wil get error
