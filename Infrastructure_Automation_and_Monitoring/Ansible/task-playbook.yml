@@ -1,0 +1,8 @@
+--- # Ansible playbook with task
+- hosts: demo
+  user: ubuntu
+  become: yes
+  connection: ssh
+  tasks:
+    - name: Install tree on all hosts
+      action: apt name=tree state=present

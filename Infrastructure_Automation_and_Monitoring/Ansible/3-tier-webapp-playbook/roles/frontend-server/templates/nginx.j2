@@ -1,0 +1,12 @@
+server {
+  listen 80;
+  server_name _default;
+  location = /favicon.ico { access_log off; log_not_found off; }
+  location /static/ {
+      root /home/ubuntu/new_chatapp/fundoo;
+  }
+  location / {
+      include proxy_params;
+      proxy_pass http://172.31.23.110:8000;
+  }
+}

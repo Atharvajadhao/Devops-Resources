@@ -1,0 +1,12 @@
+--- # Handlers playbook
+- hosts: demo
+  user: ubuntu
+  become: yes
+  connection: ssh
+  tasks:
+    - name: Install nginx
+      action: apt name=httpd state=present
+      notify: restart nginx
+  handlers:
+    - name: restart nginx
+      action: service name=httpd state=restarted

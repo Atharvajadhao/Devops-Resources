@@ -1,0 +1,3 @@
+---
+- name: Installing tree package
+  apt: pkg=tree state=present

@@ -1,0 +1,26 @@
+- name: First update the packages
+  apt: update_cache=yes force_apt_get=yes
+
+- name: Installing nginx
+  apt: name=nginx state=present
+
+- name: Creating configuration file for nginx
+  file:
+    path: /etc/nginx/sites-available/fundoo
+    state: touch
+
+- name: copying nginx configuration from template file to conig file
+  template:
+    src: nginx.j2
+    dest: /etc/nginx/sites-available/fundoo
+
+- name: creating symbolic linke of configuration file
+  command: ln -sf /etc/nginx/sites-available/fundoo /etc/nginx/sites-enabled/
+
+- name: removing default nginx file
+  command: rm /etc/nginx/sites-enabled/default
+
+- name: restarting nginx service
+  service:
+    name: nginx
+    state: restarted

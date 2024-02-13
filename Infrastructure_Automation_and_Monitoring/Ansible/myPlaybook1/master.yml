@@ -1,0 +1,7 @@
+---
+- hosts: demo
+  user: ubuntu
+  become: yes
+  connection: ssh
+  roles:
+    - webserver

@@ -1,0 +1,10 @@
+--- # Mt variables playbook
+- hosts: demo
+  user: ubuntu
+  become: yes
+  connection: ssh
+  vars:
+    pkgName: tree
+  tasks:
+    - name: Install '{{pkgName}}' on linux hosts
+      action: apt name='{{pkgName}}' state=present

@@ -1,0 +1,9 @@
+---
+- hosts: backend-servers
+  become: yes
+  roles: 
+    - backend-server
+- hosts: frontend-servers
+  become: yes
+  roles:
+    - frontend-server

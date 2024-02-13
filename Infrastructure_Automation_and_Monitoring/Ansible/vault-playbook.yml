@@ -1,0 +1,8 @@
+--- # This his a vault playbook
+- hosts: demo
+  user: ubuntu
+  become: yes
+  connection: ssh
+  tasks:
+    - name: Install tree
+      action: apt name=tree state=present
