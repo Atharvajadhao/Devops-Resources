@@ -1,0 +1,205 @@
+1. Setup on the system to monitore
+	Installing filebeat on the system which you have to monitore
+	> curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-oss-7.15.1-amd64.deb
+	> sudo dpkg -i filebeat-oss-7.15.1-amd64.deb
+	Remove filebeat (sudo dpkg --purge filebeat)
+
+	
+	Enable the nginx module, as of now we will take nginx logs only
+	> filebeat modules enable nginx
+	After enabling change the setting of nginx.yml module
+	> sudo vi /etc/filebeat/modules.d/nginx.yml
+		- module: nginx
+		  # Access logs
+		  access:
+		    enabled: false
+		    var.path: ["/var/log/nginx/access.log*"]
+	
+		  # Error logs
+		  error:
+		    enabled: true
+		    var.path: ["/var/log/nginx/error.log*"]
+
+		  # Ingress-nginx controller logs. This is disabled by default. It could be used in Kubernetes environments to parse ingress-nginx logs
+		  ingress_controller:
+		    enabled: false
+	
+	Now change the configuration file ('filebeat.yml') as per follow:
+	> sudo vi filebeat.yml
+		filebeat.inputs:
+		  - type: log
+		    paths:
+		    - /var/log/nginx/access.log.*
+
+		filebeat.config.modules:
+		  path: ${path.config}/modules.d/*.yml
+		  reload.enabled: true
+		  reload.period: 10s
+
+		output.logstash:
+		  hosts: ["ELK server private IP:5044"]
+
+	Restart filebeat service
+
+2. Setup on the ELK_Server
+	To install ELK we need java and nginx installed on our system
+		> sudo apt-get update
+		> sudo apt-get install openjdk-11-jdk
+		> sudo apt install nginx
+	
+	Installing process of ElasticSearch:
+		> wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+		> echo "deb  https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
+		> sudo apt update
+		> sudo apt install  elasticsearch
+	After installing now we have to do some changes in elasticsearch.yml configuration file
+		> sudo vi /etc/elasticsearch/elasticsearch.yml
+		Uncomment or change the config file according to follow:
+		   cluster.name: my-application
+		   node.name: node-1
+   
+		   path.logs: /var/log/elasticsearch
+		   path.data: /var/lib/elasticsearch
+  
+		   transport.host: localhost
+		   transport.tcp.port: 9300
+		   network.host: 0.0.0.0
+		   http.port: 9200
+	DO:
+		> sudo systemctl start elasticsearch
+		> sudo systemctl enable elasticsearch
+	
+	You can test whether your Elasticsearch service is running by sending an HTTP request, go to any server and type:
+		> curl -http://<ip of elasticsearch server>:9200
+	
+	Come to kibana and logstash server:
+	Installing and configuring Kibana
+		> curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch |sudo gpg --dearmor -o /usr/share/keyrings/elastic.gpg
+		> echo "deb [signed-by=/usr/share/keyrings/elastic.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
+		> sudo apt-get update
+		> sudo apt install kibana
+		> sudo systemctl enable kibana
+		> sudo systemctl start kibana
+		> sudo apt install nginx
+
+	The following command will create the administrative Kibana user and password, and store them in the htpasswd.users file. You will configure Nginx to require this username and password and read this file momentarily:
+		> echo "kibanaadmin:`openssl passwd -apr1`" | sudo tee -a /etc/nginx/htpasswd.users
+
+	Next, we will create an Nginx server block file:
+		> sudo vi /etc/nginx/sites-available/kibana
+		server {
+		    listen 80;
+		    server_name your_domain;
+		    auth_basic "Restricted Access";
+		    auth_basic_user_file /etc/nginx/htpasswd.users;
+		    location / {
+		        proxy_pass http://localhost:5601;
+		        proxy_http_version 1.1;
+		        proxy_set_header Upgrade $http_upgrade;
+		        proxy_set_header Connection 'upgrade';
+		        proxy_set_header Host $host;
+		        proxy_cache_bypass $http_upgrade;
+		    }
+		}
+
+	Enable the new configuration by creating a symbolic link to the sites-enabled directory
+		> sudo ln -s /etc/nginx/sites-available/kibana /etc/nginx/sites-enabled/kibana
+		> sudo rm /etc/nginx/sites-enabled/default
+	In sudo vi /etc/kibana/kibana.yml do remove the # from following line and put the ip of elasticsearch server instead of localhost
+		> elasticsearch.hosts: ["http://<elasticsearch_server_ip>:9200"]
+	
+	Now do,
+		> sudo systemctl reload nginx
+	Enable the firewall for nginx:
+		> sudo ufw allow 'Nginx Full'
+	Now kibana is accessible using public ip of the server:	
+		> http://<public_ip_of_server>:80
+
+	
+
+	Installing and Configuring logstash
+
+		> sudo apt install logstash
+
+	Create a configuration file called myConfigFile.conf where you will set up your Filebeat input:
+		> sudo vi /etc/logstash/conf.d/myConfigFile.conf
+		input {
+		  beats {
+		    port => 5044
+		  }
+		}
+		filter {
+		        grok {
+	        		match => [ "message", "%{GREEDYDATA}\|%{GREEDYDATA}%{INT}m%{GREEDYDATA:host_requested}%{SPACE} %{IP:client_ip}%{SPACE}\-%{SPACE}\-%{SPACE}\[%{HTTPDATE:timestamp}\]%{GREEDYDATA:body}"]
+		        }
+		}
+		output {
+		        elasticsearch {
+		                hosts => ["http://172.31.36.213:9200"]
+		                manage_template => false
+		                index => "nginx-index"
+		        }
+		}
+	
+	Test your Logstash configuration with this command:
+		> sudo -u logstash /usr/share/logstash/bin/logstash --path.settings /etc/logstash -t
+	
+	To check index pattern created or not
+		> curl 'localhost:9200/_cat/indices?v'
+	
+
+	If your configuration test is successful, start and enable Logstash to put the configuration changes into effect:
+		> sudo systemctl start logstash
+		> sudo systemctl enable logstash
+	
+	check your error log file of logstash
+		> less /var/log/logstash/logstash-plain.log
+
+
+	
+********************************************************************************************************************************
+
+Now go to browser and paste your ELK ip to access kibana
+
+Access your kibana using username and password
+
+do following options in kibana
+
+ Discover ------> stack management -------> index pattern
+
+ you can find here your index pattern
+
+if not their
+  create new index pattern
+
+after that we have to create Dashboard
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
