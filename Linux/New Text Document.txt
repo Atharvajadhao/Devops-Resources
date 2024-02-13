@@ -1,0 +1,5 @@
+what is process management in linux
+what are types process
+process states
+what use ps commamd
+what is the use of kill command
