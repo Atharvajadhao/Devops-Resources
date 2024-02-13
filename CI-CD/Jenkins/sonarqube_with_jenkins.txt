@@ -1,0 +1,79 @@
+Create a ubuntu server with instance type t2.medium
+
+Preparing the install:
+		> sudo mkdir /opt/sonarqube
+		> sudo apt-get install unzip
+
+	create a database and credentials that SonarQube will use
+		> sudo apt install mysql-server
+		> sudo apt install mysql-client
+		> sudo mysql -u root -p
+
+	Then create the SonarQube database:
+		> CREATE DATABASE sonarqube;
+
+	Create the credentials that SonarQube will use to access the database
+		> CREATE USER sonarqube@'localhost' IDENTIFIED BY 'sonarqube@123';
+	Then grant permissions so that the newly created user can make changes to the SonarQube database:
+		> GRANT ALL ON sonarqube.* to sonarqube@'localhost';
+	
+	Then apply the permission changes and exit the MySQL console:
+		> FLUSH PRIVILEGES;
+		> EXIT;
+
+
+
+Downloading and Installing the sonarqube:
+	> cd /opt/sonarqube
+
+	download the file:
+		> sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-7.5.zip
+		> sudo unzip sonarqube-7.5.zip
+		> sudo rm sonarqube-7.5.zip
+
+
+
+Configuring the sonarqube server:
+	Open the sonarqube configuration file:
+		> sudo nano sonarqube-7.5/conf/sonar.properties
+	Change the username and password that SonarQube will use to access the database to the username and password you created for MySQL:
+		...
+		sonar.jdbc.username=sonarqube
+		sonar.jdbc.password=sonarqube@123
+		...
+	Tell SonarQube to use MySQL as the database driver:
+		...
+		sonar.jdbc.url=jdbc:mysql://localhost:3306/sonarqube?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&useConfigs=maxPerformance&useSSL=false
+		...
+	Once you have updated those values, save and close the file.
+
+	Create the service file:
+		> sudo nano /etc/systemd/system/sonarqube.service
+	Add following content to the file:
+		[Unit]
+		Description=SonarQube service
+		After=syslog.target network.target
+		[Service]
+		Type=forking
+		ExecStart=/opt/sonarqube/sonarqube-7.5/bin/linux-x86-64/sonar.sh start
+		ExecStop=/opt/sonarqube/sonarqube-7.5/bin/linux-x86-64/sonar.sh stop
+		[Install]	
+		WantedBy=multi-user.target
+	
+	Close and save the file, then start the SonarQube service:
+		> sudo systemctl deamon-reload
+		> sudo systemctl restart sonarqube
+		> sudo systemctl status sonarqube
+		> sudo systemctl enable sonarqube
+
+	Check if the server has started by querying the HTTP port:
+		> curl http://127.0.0.1:9000
+
+
+
+
+
+
+
+
+
