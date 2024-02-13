@@ -1,0 +1,57 @@
+CREATING VOLUME FROM Dockerfile
+	Create a Dockerfile and write:
+		> vi Dockerfile
+		FROM ubuntu
+		VOLUME ["/myvolume"]
+		
+	Then create an image from this docker file
+		> sudo docker build -t myimage .
+	
+	Now create a container from this image & run
+		> sudo docker run -it --name container1 myimage /bin/bash
+	
+	Go to the container1 and see myvolume:
+		> cd myvolume
+		> touch myFile.txt
+	
+	Now share this volume with another container
+		> sudo docker run -it --name container2 --privileged=true --volumes-from container1 ubuntu /bin/bash
+
+	Now after creating container2, myvolume is visible
+		> cd /myvolume
+		> touch file2.txt
+		> sudo docker start container1
+		> sudo docker attach container1
+		> ls /myvolume
+		You can see file2.txt here
+
+
+
+
+
+CREATING VOLUME USIGN COMMAND:
+	> sudo docker run -it --name container1 -v /volume1 ubuntu /bin/bash
+	> cd /volume1 
+	> touch myFile1.txt
+	
+	Now create one more container and share volume1 
+	> sudo docker run -it --name container2 --privileged==true --volumes-from container1 ubuntu /bin/bash
+
+
+
+
+
+Volumes (Host-to-container)
+	Create a volume file in /home/ubuntu/volumeDir
+		> sudo docker run -it --name hostContainer --privileged=true -v /home/ubuntu/volumeDir:/volume1 ubuntu /bin/bash
+
+	Now create file in this containers volume
+		> cd /volume1
+		> touch file2.txt
+
+	This same file will be visible in the /home/ubuntu/volumeDir of host machine
+		
+
+
+
+	

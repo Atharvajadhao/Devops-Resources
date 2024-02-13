@@ -1,0 +1,43 @@
+pipeline {
+    agent { label 'docker-node' }
+    
+
+    stages {
+        stage('Create Docker Network') {
+             steps {
+                 script {
+                     // Create Docker network if it doesn't exist
+                     sh "docker network ls -f name=my_network | grep my_network || docker network create my_network"
+                 }
+             }
+        }
+        
+        
+        stage('Pull Docker Images') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-hub-cred', toolName: 'Docker') {
+                        // Pull your Docker images
+                        docker.image('atharvajadhao/database-image').pull()
+                        docker.image('atharvajadhao/backend-image').pull()
+                        docker.image('atharvajadhao/frontend-image').pull()
+                        
+                        // Run containers on the specified network
+                        docker.image('atharvajadhao/database-image').run(
+                            "--name=database --network=my_network -d"
+                        )
+                    
+                        docker.image('atharvajadhao/backend-image').run(
+                            "--name=backend --network=my_network -d"
+                        )
+                    
+                        docker.image('atharvajadhao/frontend-image').run(
+                            "--name=frontend --network=my_network -p 80:80 -d"
+                        )
+                    
+                    }
+                }
+            }
+        }
+    }
+}

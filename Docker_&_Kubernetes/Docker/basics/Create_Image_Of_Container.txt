@@ -1,0 +1,24 @@
+Create a container first:
+	> sudo docker run -it --name newContainer1 ubuntu /bin/bash
+
+Go in the container and do:
+	> cd ~
+	> touch myFile.txt
+
+Now if you want to see the difference between the base image and changes on it:
+	> sudo docker diff newContainer1
+	Output: C /root
+		A /root/.bash_history
+		C /tmp	
+		A /tmp/myFile.txt
+
+Now create image of this container:
+	> sudo docker commit newContainer1 containerimage1
+	> sudo docker images
+
+Now create container from the image:
+	> docker run -it --name container2 containerimage1
+
+Now go in the newly created container and check if the created file exist their or not:
+	> cd ~
+	> ls

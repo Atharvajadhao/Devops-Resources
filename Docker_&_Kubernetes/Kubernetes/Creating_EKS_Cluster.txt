@@ -1,0 +1,89 @@
+-------------------------------------------------Creating cluster-------------------------------------------
+First we need to create an IAM role for EKS:
+	In AWS Management Console:
+		> Choose Create role.
+		> Under Trusted entity type, select AWS service.
+		> From the Use cases for other AWS services dropdown list, choose EKS.
+		> Choose EKS - Cluster for your use case, and then choose Next.
+		> On the Add permissions tab, choose Next.
+		> For Role name, enter a unique name for your role, such as eksClusterRole.
+		> For Description, enter descriptive text such as Amazon EKS - Cluster role.
+		> Choose Create role.
+
+Now got to EKS console and follow the following instructions:
+	In AWS Management Console (EKS):
+		- Add Cluser >> Create
+		- On cluser configuration page:
+			- name you cluser
+			- choose IAM role for your cluster
+			- leave remaining default and next
+		- On Specify networking page:
+			- choose vpc and subnets
+			- next
+		- On the Configure observability page, choose Next
+		- On the Select add-ons page, choose Next
+		- On the Configure selected add-ons settings page, choose Next.
+		- On the Review and create page, choose Create.
+
+(Recommanded) Creating Cluster using ekctl:
+	Installing eksctl:
+		# for ARM systems, set ARCH to: `arm64`, `armv6` or `armv7`
+		> ARCH=amd64
+		> PLATFORM=$(uname -s)_$ARCH
+		> curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+
+		# (Optional) Verify checksum
+		> curl -sL "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_checksums.txt" | grep $PLATFORM | sha256sum --check
+		> tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
+		> sudo mv /tmp/eksctl /usr/local/bin
+
+		- Run following command to confirm installation
+		> eksctl version
+
+	Run following command to create a cluster:
+		> eksctl create cluster --name my-cluster --region ap-south-1 --version 1.28 --vpc-public-subnets subnet-02d3fcd1f97d0769b,subnet-0840a589fde007d28 --node-ami-family ami-03f4878755434977f --node-type t2.micro --nodes 3 --ssh-access --ssh-public-key newKey2
+
+
+
+--------------------------------------------------Connection cluster with you computer-----------------------------------------------
+Install kubectl on the computer from where you want to access your cluster
+	- Download the kubectl binary for your cluster's Kubernetes version
+		- we have kubernetes version -> 1.28
+		> curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.28.5/2024-01-04/bin/linux/amd64/kubectl
+	- Verify the downloaded binary with the SHA-256 checksum for your binary
+		> curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.28.5/2024-01-04/bin/linux/amd64/kubectl.sha256
+		> sha256sum -c kubectl.sha256
+		> openssl sha1 -sha256 kubectl
+	- Apply execute permissions to the binary file of kubectl.
+		> chmod +x ./kubectl
+	- Copy the binary to a folder in your PATH
+		> mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
+	- After you install kubectl, you can verify its version
+		> kubectl version --client
+
+Now, To configure your computer to communicate with your cluster
+	- Create or update a kubeconfig file for your cluster:
+		> aws eks update-kubeconfig --region ap-south-1 --name my-cluster
+	- Test your configuration
+		> kubectl get svc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		

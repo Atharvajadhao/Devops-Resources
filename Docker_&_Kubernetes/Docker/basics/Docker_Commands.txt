@@ -1,0 +1,41 @@
+Basic commands in docker:
+
+1. To see all images present in your local machine
+	> docker images
+
+2. To find out images in docker hub:
+	> docker search jenkins
+
+3. To download image from docker-hub to local machine
+	> docker pull jenkins
+
+4. To give name to container:
+	> docker run -it --name myContainer ubutnu /bin/bash
+
+5. To check service is start or not
+	> service docker status
+
+6. To start a container:
+	> docker start myContainer
+
+7. To go inside container:
+	> docker attach myContainer
+
+8. To see all containers
+	> docker ps -a
+
+9. To see only running containers
+	> docker ps
+
+10. To stop container: 
+	> docker stop myContainer
+
+11. To delete container
+	> docker rm myContainer
+
+12. To delete any image:
+	> docker rmi image_name
+
+
+
+

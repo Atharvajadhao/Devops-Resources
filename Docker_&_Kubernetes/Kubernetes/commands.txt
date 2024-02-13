@@ -1,0 +1,24 @@
+Creating a node group:
+	> eksctl create nodegroup \
+  --cluster my-cluster \
+  --region ap-south-1 \
+  --name my-nodes \
+  --node-ami-family Ubuntu2004 \
+  --node-type t2.medium \
+  --nodes 3 \
+  --ssh-access \
+  --ssh-public-key newKey2
+
+
+Deleting a managed node group:
+	> eksctl delete nodegroup \
+  --cluster my-cluster \
+  --name my-mng \
+  --region region-code
+
+Get logs of a POD:
+	> kubectl logs <pod_name>
+
+
+To configure your computer to communicate with your cluster:
+	> aws eks update-kubeconfig --region region-code --name my-cluster

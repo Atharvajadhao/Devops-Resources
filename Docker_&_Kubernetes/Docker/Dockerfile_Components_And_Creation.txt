@@ -1,0 +1,32 @@
+Dockerfile Components:
+	1. FROM: for base image, this command must be on top of the docker
+	2. RUN: To execute commands, it will create a layer in image
+	3. MAINTAINER: Author / Owner / Description
+	4. COPY: Copy files from local system (dockerVM), we need to provide source, destination (we cant download file from internet ans any remote repo)
+	5. ADD: similar to copy but it provide a feature to download files from internet, also extract file at docker image side
+	6. EXPOSE: To expose ports such as port 8080 for apache, and port 80 for nginx
+	7. WORKDIR: To set working directory for a container
+	8. CMD: Executes command but during the container creation
+	9. ENTRYPOINT: Similar to CMD, but has higher priority over CMD, first commands will be executed by ENTRYPOINT only
+	10. ENV: Environment variables
+
+Create Dockerfile
+	> touch Dockerfile
+	> vi Docker file
+		FROM ubuntu
+		RUN echo "I am inevitable" > /root/myfile1.txt
+		: wq!
+	> sudo docker build -t myimg1 .
+	> sudo docker images
+	> sudo docker run -it --name myContainer myimg1 /bin/bash
+	Now got to that container and check the /root/myfile1.txt
+
+Update docker file to create a new image
+	> vi Dockerfile
+		FROM ubuntu
+		WORKDIR /root
+		RUN echo "I am inevitable" > /root/myfile1.txt
+		ENV myname thanos
+		COPY testfile /root
+		ADD test.tar.gz /root
+		

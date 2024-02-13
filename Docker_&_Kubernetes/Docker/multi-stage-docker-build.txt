@@ -1,0 +1,46 @@
+-----------------------------------------Multi-Stage Dockerfile for Database------------------------------------------------
+
+FROM mysql:latest
+ENV MYSQL_DATABASE chat_db
+ENV MYSQL_ROOT_PASSWORD root123
+ENV MYSQL_USER admin
+ENV MYSQL_PASSWORD admin
+EXPOSE 3306
+
+-----------------------------------------Multi-Stage Dockerfile for Backend-------------------------------------------------
+
+FROM python:3.6
+ENV DATABASE_NAME chat_db
+ENV DATABASE_USER admin
+ENV DATABASE_PASS admin
+ENV DATABASE_HOST database
+RUN apt-get update
+RUN apt-get install --yes python3-pip git
+WORKDIR /root/
+RUN git clone https://github.com/Atharvajadhao/new_chatapp.git
+WORKDIR /root/new_chatapp
+RUN pip3 install -r requirements.txt
+RUN pip3 install mysqlclient
+EXPOSE 8000
+WORKDIR /root/new_chatapp/fundoo/
+ENTRYPOINT  python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000
+
+----------------------------------------Multi-Stage Dockerfile for Frontend-------------------------------------------------
+
+FROM ubuntu
+RUN apt-get update
+RUN apt-get install -y nginx
+COPY nginx.conf /etc/nginx/sites-available/fundoo
+RUN ln -s /etc/nginx/sites-available/fundoo /etc/nginx/sites-enabled
+RUN rm -rf /etc/nginx/sites-enabled/default
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
+
+
+
+
+
+
+
+
