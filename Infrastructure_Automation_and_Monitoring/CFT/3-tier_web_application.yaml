@@ -1,0 +1,262 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This CF template consist of the infrastructure of a 3-tier web application
+
+Resources:
+  #making vpc
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 192.168.0.0/16
+      Tags:
+        - Key: Name
+          Value: my-vpc-01
+  
+  #creating public subnet
+  myPublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: 
+        Ref: myVPC
+      CidrBlock: 192.168.0.0/24
+      AvailabilityZone: us-east-2a
+      Tags:
+        - Key: Name
+          Value: my-public-subnet-1
+  
+  #creating private subnet - 1
+  myPrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: myVPC
+      CidrBlock: 192.168.1.0/24
+      AvailabilityZone: us-east-2b
+      Tags:
+        - Key: Name
+          Value: my-private-subnet-1
+  
+  #creating private subnet - 2
+  myPrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: myVPC
+      CidrBlock: 192.168.2.0/24
+      AvailabilityZone: us-east-2c
+      Tags:
+        - Key: Name
+          Value: my-private-subnet-2
+  
+  #creating Internet Gateway
+  myIG1:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: my-IG-1
+
+  #attaching vpc to igw
+  VpcToIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId:
+        Ref: myIG1
+      VpcId: 
+        Ref: myVPC
+  
+  #creating route table for public subnet
+  publicSubnetRT:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: 
+        Ref: myVPC
+      Tags:
+        - Key: Name
+          Value: publicSubnetRT
+  # Associating the public subnet to the public route table
+  publicSubnetRTAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: publicSubnetRT
+      SubnetId:
+        Ref: myPublicSubnet1
+  #creating route for public subnet to igw
+  routePublicSubnetToIGW:
+    Type: AWS::EC2::Route
+    Properties:
+       RouteTableId:
+         Ref: publicSubnetRT
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId:
+         Ref: myIG1
+
+  #creating route table for private subnet
+  privateSubnetRT:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: 
+        Ref: myVPC
+      Tags:
+        - Key: Name
+          Value: privateSubnetRT
+  #creating association between private subnets and route tables
+  privateSubnetRTAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: privateSubnetRT
+      SubnetId:
+        Ref: myPrivateSubnet1
+  privateSubnetRTAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: privateSubnetRT
+      SubnetId:
+        Ref: myPrivateSubnet2
+
+  #creating nat gateway with elastic IP
+  NATGElasticIP: #creating elastic Ip for Nat Gateway
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  NATGateway: #creating Nat Gateway
+   Type: AWS::EC2::NatGateway
+   Properties:
+      AllocationId: !GetAtt NATGElasticIP.AllocationId
+      SubnetId: !Ref myPublicSubnet1
+      Tags:
+      - Key: Name
+        Value: myNatGateway-1
+  NATGatewayRoute: #Creating the route from private RT to nat gateway
+   DependsOn: NATGateway
+   Type: AWS::EC2::Route
+   Properties:
+      RouteTableId: !Ref privateSubnetRT
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NATGateway
+
+  #Security Group for front-end
+  frontEndSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This is security group create for front end instance
+      VpcId: !Ref myVPC
+      Tags:
+        - Key: Name
+          Value: frontEndSG-1
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp 
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+  
+  #Security Group for back-end
+  backEndSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This is security group create for backend end instance
+      VpcId: !Ref myVPC
+      Tags:
+        - Key: Name
+          Value: backEndSG-1
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  # Creating frontend instance
+  frontEndInstance:
+    DependsOn: frontEndSG
+    Type: AWS::EC2::Instance 
+    Properties:
+      ImageId: ami-09d429cdd9cd68510
+      InstanceType: t2.micro
+      KeyName: NewKeyPair
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - Ref: frontEndSG
+          SubnetId: !Ref myPublicSubnet1 
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdm
+          Ebs:
+            VolumeType: io1
+            Iops: 200
+            DeleteOnTermination: true
+            VolumeSize: 8
+      Tags:
+        - Key: Name
+          Value: my-frontend-instance
+  
+  #creating backend instance
+  backEndInstance:
+    DependsOn: backEndSG
+    Type: AWS::EC2::Instance 
+    Properties:
+      ImageId: ami-0827bad3f0c2fc7cd
+      InstanceType: t2.micro
+      KeyName: Backend_Instance_Key
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: false
+          DeviceIndex: 0
+          GroupSet: 
+            - Ref: backEndSG
+          SubnetId: !Ref myPrivateSubnet1 
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdm
+          Ebs:
+            VolumeType: io1
+            Iops: 200
+            DeleteOnTermination: true
+            VolumeSize: 8
+      Tags:
+        - Key: Name
+          Value: my-backend-instance
+
+  
+Outputs:
+  myVPCId:
+    Description: Id of the VPC created
+    Value:
+      Ref: myVPC
+  
+  myPublicSubnet1Id:
+    Description: Id of the my-public-subnet-1
+    Value:
+      Ref: myPublicSubnet1
+  myPrivateSubnet1Id:
+    Description: Id of the my-private-subnet-1
+    Value:
+      Ref: myPrivateSubnet1
+  myPrivateSubnet2Id:
+    Description: Id of the my-private-subnet-2
+    Value:
+      Ref: myPrivateSubnet2
+
+  frontEndSGId:
+    Description: Id of the front end security group
+    Value: !Ref frontEndSG
+  backEndSGId:
+    Description: Id of the front end security group
+    Value: !Ref backEndSG
+
+  frontEndInstanceId:
+    Description: Id of the frontend instance
+    Value: !Ref frontEndInstance
+  backEndInstanceId:
+    Description: Id of the backend instance
+    Value: !Ref backEndInstance
+
+

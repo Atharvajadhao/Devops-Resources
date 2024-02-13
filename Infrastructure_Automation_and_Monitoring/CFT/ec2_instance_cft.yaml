@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This is a CFT template to launch an EC2 instance
+Resources:
+  tempInstance: #name of the resource
+    Type: AWS::EC2::Instance #give the type of the resource, here we have given EC2-Instance
+    Properties: #now give the properties
+      ImageId: ami-0e83be366243f524a
+      InstanceType: t2.micro
+      KeyName: NewKeyPair
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: subnet-028cc28001feb5aab
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdm
+          Ebs:
+            VolumeType: io1
+            Iops: 200
+            DeleteOnTermination: true
+            VolumeSize: 8
+

@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This is a CF template to create an EC2 Instance with custom paratmeters
+Parameters:
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+    Description: Default value is t2.micro, you can select value among t2.micro, t2.small, t2.medium
+  InstanceKeyPairParameter:
+    Description: Amazon EC2 Key Pair
+    Type: AWS::EC2::KeyPair::KeyName
+
+Resources:
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: This is sample security group create using CFT
+      VpcId: vpc-0746efe0010e45be5
+      SecurityGroupIngress:
+        - IpProtocol: tcp 
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0e83be366243f524a
+      InstanceType:
+        Ref: InstanceTypeParameter
+      KeyName:
+        Ref: InstanceKeyPairParameter
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - Ref: InstanceSecurityGroup
+          SubnetId: subnet-028cc28001feb5aab
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdm
+          Ebs:
+            VolumeType: io1
+            Iops: 200
+            DeleteOnTermination: true
+            VolumeSize: 8
+
+Outputs:
+  SecurityGroupId:
+    Description: SecurityGroup Id
+    Value:
+      Ref: InstanceSecurityGroup
